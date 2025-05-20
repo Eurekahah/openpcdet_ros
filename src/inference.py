@@ -40,6 +40,8 @@ from utils.draw_3d import Draw3DBox
 from utils.global_def import *
 from utils import *
 
+
+import torch
 import yaml
 import os
 BASE_DIR = os.path.abspath(os.path.join( os.path.dirname( __file__ ), '..' ))
@@ -54,7 +56,9 @@ model_path = para_cfg["model_path"]
 threshold = para_cfg["threshold"]
 pointcloud_topic = para_cfg["pointcloud_topic"]
 RATE_VIZ = para_cfg["viz_rate"]
+process_every_n_frames = para_cfg["process_every_n_frames"]
 inference_time_list = []
+frames_count = 0
 
 
 def xyz_array_to_pointcloud2(points_sum, stamp=None, frame_id=None):
@@ -82,6 +86,12 @@ def xyz_array_to_pointcloud2(points_sum, stamp=None, frame_id=None):
     return msg
 
 def rslidar_callback(msg):
+    global frames_count
+    frames_count +=1
+    if frames_count % process_every_n_frames != 0:
+        return # 降低process_every_n_frames倍的处理频率
+    torch.cuda.empty_cache()  # 清理显存
+    
     select_boxs, select_types = [],[]
     if proc_1.no_frame_id:
         proc_1.set_viz_frame_id(msg.header.frame_id)
@@ -249,7 +259,7 @@ if __name__ == "__main__":
     
     sub_ = rospy.Subscriber(sub_lidar_topic[0], PointCloud2, rslidar_callback, queue_size=1, buff_size=2**24)
     pub_rviz = rospy.Publisher('detect_3dbox',MarkerArray, queue_size=10)
-    proc_1.set_pub_rviz(pub_rviz)
+    proc_1.set_pub_rviz(pub_rviz,"velodyne")
     print(f"{bc.HEADER} ====================== {bc.ENDC}")
     print(" ===> [+] PCDet ros_node has started. Try to Run the rosbag file")
     print(f"{bc.HEADER} ====================== {bc.ENDC}")

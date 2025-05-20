@@ -1,3 +1,7 @@
 <launch>
-    <node pkg="openpcdet" type="inference.py" name="object_3d_detector_node" output="screen"/>
+    
+    <node pkg="openpcdet" type="inference.py" name="object_3d_detector_node" output="screen">
+        <env name="PYTHONPATH" value="/home/eureka/pyvenv/pointrcnn/lib/python3.8/site-packages:/home/eureka/code/OpenPCDet:$(env PYTHONPATH)" />
+        <env name="PATH" value="/home/eureka/pyvenv/pointrcnn/bin:$(env PATH)" />
+    </node>
 </launch>

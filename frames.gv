@@ -1,0 +1,18 @@
+digraph G {
+"map" -> "robot_1/odom"[label="Broadcaster: /global_manager\nAverage rate: 10.412 Hz\nMost recent transform: 3949.226 ( 0.091 sec old)\nBuffer length: 2.401 sec\n"];
+"odom" -> "link_3"[label="Broadcaster: /play_1747208052636517758\nAverage rate: 30.414 Hz\nMost recent transform: 3949.312 ( 0.005 sec old)\nBuffer length: 2.466 sec\n"];
+"robot_1camera_init" -> "robot_1/aft_mapped"[label="Broadcaster: /alaserMapping_robot_1\nAverage rate: 10.439 Hz\nMost recent transform: 3949.136 ( 0.181 sec old)\nBuffer length: 2.299 sec\n"];
+"robot_1/odom" -> "robot_1/ouster"[label="Broadcaster: /aloam_submap_Publisher_client1\nAverage rate: 10.439 Hz\nMost recent transform: 3949.136 ( 0.181 sec old)\nBuffer length: 2.299 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 3949.317"[ shape=plaintext ] ;
+ }->"map";
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 3949.317"[ shape=plaintext ] ;
+ }->"odom";
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 3949.317"[ shape=plaintext ] ;
+ }->"robot_1camera_init";
+}
