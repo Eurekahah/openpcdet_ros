@@ -95,6 +95,7 @@ class Draw3DBox:
         self.frame_id = marker_frame_id
         self.lifetime = 1.0/rate
         self.box3d_pub = box3d_pub
+        self.history_box3d_pub = box3d_pub
 
     def set_frame_id(self, marker_frame_id):
         self.frame_id = marker_frame_id
@@ -130,7 +131,7 @@ class Draw3DBox:
                 marker.color.g = g/255.0
                 marker.color.b = b/255.0
             marker.color.a = 1.0
-            marker.scale.x = 0.1
+            marker.scale.x = 0.2
 
             marker.points = []
             for l in LINES:
@@ -204,6 +205,59 @@ class Draw3DBox:
                 marker_array.markers.append(text_marker)
 
         self.box3d_pub.publish(marker_array)
+
+    def publish_history_3dbox(self,boxes_history, types_history, scores_history, alpha=0.7):
+        """
+        发布历史3D框，使用透明度来区分历史框与当前框
+        
+        Args:
+            alpha: 透明度衰减系数，每个历史框的透明度会随时间衰减
+        """
+        
+        if boxes_history is None or len(boxes_history) == 0:
+            return  # 如果没有历史框，直接返回
+            
+        # 创建一个新的MarkerArray用于历史框
+        marker_array = MarkerArray()
+        
+        # 将历史框转换为corners
+        all_boxes = np.array(boxes_history)
+        corners_3d_velos = boxes_to_corners_3d(all_boxes)
+        
+        # 从最旧的框到最新的框，最新的框透明度最高
+        for i, (corners_3d_velo, box_type) in enumerate(zip(corners_3d_velos, types_history)):
+            # 计算透明度，最新的框透明度接近1，最旧的框透明度接近0
+            # 历史框的透明度随时间衰减
+            transparency = alpha * (i + 1) / len(boxes_history)
+            
+            # 3d box
+            marker = Marker()
+            marker.header.frame_id = self.frame_id
+            marker.header.stamp = rospy.Time.now()
+            marker.id = i + 10000  # 避免与当前检测框的ID冲突
+            marker.action = Marker.ADD
+            marker.lifetime = rospy.Duration(self.lifetime)
+            marker.type = Marker.LINE_LIST
+            
+            b, g, r = DETECTION_COLOR_MAP[box_type]
+            marker.color.r = r/255.0
+            marker.color.g = g/255.0
+            marker.color.b = b/255.0
+            marker.color.a = transparency  # 设置透明度
+            marker.scale.x = 0.15  # 线条稍细一些，以区分当前框
+            
+            marker.points = []
+            for l in LINES:
+                p1 = corners_3d_velo[l[0]]
+                marker.points.append(Point(p1[0], p1[1], p1[2]))
+                p2 = corners_3d_velo[l[1]]
+                marker.points.append(Point(p2[0], p2[1], p2[2]))
+            marker_array.markers.append(marker)
+        
+        # 使用另一个发布器发布历史框，避免与当前检测框混淆
+        # 注意：你需要先创建这个发布器
+        self.history_box3d_pub.publish(marker_array)
+
 
     def compute_3d_box_cam2(self, h, w, l, x, y, z, yaw):
         """

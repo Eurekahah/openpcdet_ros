@@ -5,9 +5,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /PointCloud21
         - /MarkerArray1
         - /MarkerArray2
+        - /MarkerArray3
       Splitter Ratio: 0.39147287607192993
     Tree Height: 713
   - Class: rviz/Selection
@@ -27,7 +27,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -103,7 +103,7 @@ Visualization Manager:
       Marker Topic: /global_manager/graph
       Name: MarkerArray
       Namespaces:
-        graph_node: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -134,6 +134,14 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /history_3dbox
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -198,5 +206,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1884
-  X: 537
-  Y: 34
+  X: 43
+  Y: 51
