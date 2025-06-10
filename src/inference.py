@@ -44,6 +44,7 @@ from utils import *
 import torch
 import yaml
 import os
+import gc
 BASE_DIR = os.path.abspath(os.path.join( os.path.dirname( __file__ ), '..' ))
 with open(f"{BASE_DIR}/launch/config.yaml", 'r') as f:
     try:
@@ -221,12 +222,25 @@ def rslidar_callback(msg):
     msg_cloud = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
     np_p = get_xyz_points(msg_cloud, True)
     # 如果点云为空，直接返回
-    if np_p.shape[0] == 0:
+    if np_p is None or len(np_p) == 0 or np_p.shape[0] == 0:
         print(f"\n{bc.FAIL} No points in lidar data, skipping detection {bc.ENDC}\n")
         print(f" -------------------------------------------------------------- ")
         return
     
-    scores, dt_box_lidar, types, pred_dict = proc_1.run(np_p, frame)
+    try:
+        scores, dt_box_lidar, types, pred_dict = proc_1.run(np_p, frame)
+    except Exception as e:
+        print(f"\n{bc.FAIL} Error during inference: {e} {bc.ENDC}\n")
+        torch.cuda.empty_cache()  # 清理显存
+        gc.collect()  # 强制垃圾回收
+        time.sleep(0.5)  # 等待显存清理完成
+        print(f" -------------------------------------------------------------- ")
+        return
+    finally:
+        torch.cuda.empty_cache()  # 清理显存
+        gc.collect()  # 强制垃圾回收
+        time.sleep(0.5)  # 等待显存清理完成
+
     for i, score in enumerate(scores):
         if score>threshold:
             select_boxs.append(dt_box_lidar[i])
@@ -235,14 +249,15 @@ def rslidar_callback(msg):
     if len(select_boxs)>0:
         proc_1.detection_history.update(np.array(select_boxs), select_types, select_scores)
         proc_1.pub_rviz.publish_3dbox(np.array(select_boxs), -1, select_types)
-        proc_1.pub_history_rviz.publish_history_3dbox(np.array(proc_1.detection_history.boxes_history),
-            proc_1.detection_history.types_history, proc_1.detection_history.scores_history)
+        
         print_str = f"Frame id: {frame}. Prediction results: \n"
         for i in range(len(pred_dict['name'])):
             print_str += f"Type: {pred_dict['name'][i]:.3s} Prob: {scores[i]:.2f}\n"
         print(print_str)
     else:
         print(f"\n{bc.FAIL} No confident prediction in this time stamp {bc.ENDC}\n")
+    proc_1.pub_history_rviz.publish_history_3dbox(np.array(proc_1.detection_history.boxes_history),
+        proc_1.detection_history.types_history, proc_1.detection_history.scores_history)
     print(f" -------------------------------------------------------------- ")
 
 class DemoDataset(DatasetTemplate):
