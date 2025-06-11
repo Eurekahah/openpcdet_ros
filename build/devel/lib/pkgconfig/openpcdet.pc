@@ -1,0 +1,8 @@
+prefix=/home/eureka/code/OpenPCDet_ws/src/OpenPCDet_ros/build/devel
+
+Name: openpcdet
+Description: Description of openpcdet
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
